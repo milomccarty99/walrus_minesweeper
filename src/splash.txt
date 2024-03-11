@@ -1,0 +1,10 @@
+  (\__/)
+  (='.'=)
+  (")__(")  <- Walrus playing Minesweeper (ASCII art credit ChatGPT 3.5)
+   ────────╔╦╗╔╗╔╗╔╗─╔╗
+           ║║║╠─║╠─║╠─║╠
+           ═╩╝╚╝╚╝╚╝╚╝╚╝
+f - flag
+g - dig
+h, j, k, l - move left, down, up, right
+q - quit
