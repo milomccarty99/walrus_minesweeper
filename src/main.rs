@@ -16,19 +16,20 @@ use rand::prelude::*;
 const WIDTH: usize = 15;
 const HEIGHT: usize = 7;
 const NUMB: usize = 8;
-static mut MAP: [char; WIDTH*HEIGHT] = ['x';WIDTH*HEIGHT];
-static mut FIELD: [bool; WIDTH*HEIGHT] = [false;WIDTH*HEIGHT];
-static mut x_pos: isize = 1;
-static mut y_pos: isize = 1;
-
+struct Env {
+    map: [char; WIDTH*HEIGHT], 
+    field: [bool; WIDTH*HEIGHT],
+    x_pos: isize,
+    y_pos: isize,
+}
+static mut env: Env = Env { map: ['x';WIDTH*HEIGHT], field: [false;WIDTH*HEIGHT], x_pos: 1, y_pos: 1 };
 fn main() {
     unsafe {
-       // MAP[22] = "?";
        let bredth = WIDTH*HEIGHT;
        let mut rng = rand::thread_rng();
        for b in 0..NUMB {
            let target: usize = rng.gen::<usize>() % bredth;
-           FIELD[target] = true;
+           env.field[target] = true;
        }
 
     }
@@ -88,16 +89,16 @@ fn quit_game() {
 fn flag_map() {
     // flag the x_pos y_pos
     unsafe {
-        let c: char = MAP[<isize as TryInto<usize>>::try_into(y_pos).unwrap() * WIDTH + 
-            <isize as TryInto<usize>>::try_into(x_pos).unwrap()];
+        let c: char = env.map[<isize as TryInto<usize>>::try_into(env.y_pos).unwrap() * WIDTH + 
+            <isize as TryInto<usize>>::try_into(env.x_pos).unwrap()];
         if c == 'F' {
-            MAP[<isize as TryInto<usize>>::try_into(y_pos).unwrap() * WIDTH + 
-                <isize as TryInto<usize>>::try_into(x_pos).unwrap()] = 'x';
+            env.map[<isize as TryInto<usize>>::try_into(env.y_pos).unwrap() * WIDTH + 
+                <isize as TryInto<usize>>::try_into(env.x_pos).unwrap()] = 'x';
         }
         else {
 
-            MAP[<isize as TryInto<usize>>::try_into(y_pos).unwrap()*WIDTH +
-                <isize as TryInto<usize>>::try_into(x_pos).unwrap()] = 'F';
+            env.map[<isize as TryInto<usize>>::try_into(env.y_pos).unwrap()*WIDTH +
+                <isize as TryInto<usize>>::try_into(env.x_pos).unwrap()] = 'F';
         }
         if check_win() {
             stdin().lock();
@@ -111,13 +112,13 @@ fn check_win() -> bool {
     unsafe {
 
         for i in 0..(WIDTH * HEIGHT) {
-            if FIELD[i] {
-                if MAP[i] != 'F' {
+            if env.field[i] {
+                if env.map[i] != 'F' {
                     return false;
                 }
             }
             else {
-                if MAP[i] == 'F' {
+                if env.map[i] == 'F' {
                     return false;
                 }
             }
@@ -131,19 +132,19 @@ fn dig_map() -> bool {
     //eof
     unsafe {
         
-        return dig_map_loc(x_pos, y_pos);
-        let mut count: isize = check_bombs(x_pos, y_pos);
+        return dig_map_loc(env.x_pos, env.y_pos);
+        let mut count: isize = check_bombs(env.x_pos, env.y_pos);
         println!("{}", count.to_string());
         let temp: String = count.to_string();
         println!("{}", temp.to_string());
         if -1 == count {
-            MAP[<isize as TryInto<usize>>::try_into(y_pos).unwrap()*WIDTH +
-                <isize as TryInto<usize>>::try_into(x_pos).unwrap()] = '*';
+            env.map[<isize as TryInto<usize>>::try_into(env.y_pos).unwrap()*WIDTH +
+                <isize as TryInto<usize>>::try_into(env.x_pos).unwrap()] = '*';
         }
         else {
 
-            MAP[<isize as TryInto<usize>>::try_into(y_pos).unwrap()*WIDTH +
-                <isize as TryInto<usize>>::try_into(x_pos).unwrap()] = char::from_digit(count as u32, 10).unwrap();
+            env.map[<isize as TryInto<usize>>::try_into(env.y_pos).unwrap()*WIDTH +
+                <isize as TryInto<usize>>::try_into(env.x_pos).unwrap()] = char::from_digit(count as u32, 10).unwrap();
         }
         println!("{}",temp.to_string());
     }
@@ -155,7 +156,7 @@ fn dig_map_loc(x: isize, y: isize) -> bool {
         if x < 0 || y < 0 || x >= WIDTH.try_into().unwrap() || y >= HEIGHT.try_into().unwrap() {
             return false;
         }
-        let poschar: char = MAP[<isize as TryInto<usize>>::try_into(y).unwrap() * WIDTH + 
+        let poschar: char = env.map[<isize as TryInto<usize>>::try_into(y).unwrap() * WIDTH + 
             <isize as TryInto<usize>>::try_into(x).unwrap()];
         if poschar != 'x' {
 
@@ -167,7 +168,7 @@ fn dig_map_loc(x: isize, y: isize) -> bool {
             return true;
         }
         else if count == 0 {
-            MAP[<isize as TryInto<usize>>::try_into(y).unwrap() * WIDTH +
+            env.map[<isize as TryInto<usize>>::try_into(y).unwrap() * WIDTH +
                 <isize as TryInto<usize>>::try_into(x).unwrap()] = '\u{2588}';
             //println!("no bombs found nearby, checking position {}, {}", x, y);
             dig_map_loc(x + 1, y);
@@ -178,7 +179,7 @@ fn dig_map_loc(x: isize, y: isize) -> bool {
         }
         else {
             //println!("there were {} bombs found nearby, stopping search", count);
-            MAP[<isize as TryInto<usize>>::try_into(y).unwrap() * WIDTH +
+            env.map[<isize as TryInto<usize>>::try_into(y).unwrap() * WIDTH +
                 <isize as TryInto<usize>>::try_into(x).unwrap()] = char::from_digit(count as u32, 10).unwrap();
             return false;
         }
@@ -189,7 +190,7 @@ fn check_bombs(x: isize, y: isize) -> isize{
     unsafe {
         let xu = <isize as TryInto<usize>>::try_into(x).unwrap();
         let yu = <isize as TryInto<usize>>::try_into(y).unwrap(); 
-        if FIELD[yu * WIDTH + xu] {
+        if env.field[yu * WIDTH + xu] {
             return -1;
         }
         else {
@@ -201,7 +202,7 @@ fn check_bombs(x: isize, y: isize) -> isize{
             //println!("the range for x is {} and {}. the range for y is {} and {}", xmin, xmax, ymin, ymax);
             for i in xmin..xmax {
                 for j in ymin..ymax {
-                    if FIELD[j * WIDTH + i] {
+                    if env.field[j * WIDTH + i] {
                         counter += 1;
                     }
                 }
@@ -214,25 +215,27 @@ fn check_bombs(x: isize, y: isize) -> isize{
 fn move_player(dir: u8) {
     
     match dir {
-        0 => unsafe { x_pos = x_pos -1},
-        1 => unsafe { y_pos = y_pos +1},
-        2 => unsafe { y_pos = y_pos -1},
-        3 => unsafe { x_pos = x_pos +1},
+        0 => unsafe { env.x_pos -= 1},
+        1 => unsafe { env.y_pos += 1},
+        2 => unsafe { env.y_pos -= 1},
+        3 => unsafe { env.x_pos += 1},
         _ => (),
     }
     // unsafe due to accessing a globale static mutable
-    unsafe {x_pos = cmp::max(x_pos, 0);
-    y_pos = cmp::max(y_pos, 0);
-    x_pos = cmp::min((WIDTH-1).try_into().unwrap(), x_pos);
-    y_pos = cmp::min((HEIGHT-1).try_into().unwrap(), y_pos);}
-    unsafe {print!("{}, {}", x_pos, y_pos)};
+    unsafe {
+        env.x_pos = cmp::max(env.x_pos, 0);
+        env.y_pos = cmp::max(env.y_pos, 0);
+        env.x_pos = cmp::min((WIDTH-1).try_into().unwrap(), env.x_pos);
+        env.y_pos = cmp::min((HEIGHT-1).try_into().unwrap(), env.y_pos);
+    }
+    unsafe {print!("{}, {}", env.x_pos, env.y_pos)};
 }
 fn get_board() -> String {
     let mut board: String = "".to_string();
     for i in 0..HEIGHT {
         for j in 0..WIDTH {
             unsafe {
-                board = format!("{}{}",board,  MAP[i*WIDTH + j].to_string());
+                board = format!("{}{}",board,  env.map[i*WIDTH + j].to_string());
             }
         }
         board = board + "\n";
@@ -247,21 +250,21 @@ fn print_board() {
         for j in 0..WIDTH {
             write!(stdout(),"{}", color::Bg(color::Reset));
             unsafe {
-                if (i == y_pos.try_into().unwrap() && j == x_pos.try_into().unwrap()) 
+                if (i == env.y_pos.try_into().unwrap() && j == env.x_pos.try_into().unwrap()) 
                 {
                     let bg = color::Bg(color::Red);
                     write!(stdout(), "{}@",bg);
                 }
                 else
                 {
-                    let current_char = MAP[i*WIDTH + j];
+                    let current_char = env.map[i*WIDTH + j];
                     match current_char {
                         '1' => write!(stdout(), "{}",color::Bg(color::Green)),
                         '2' => write!(stdout(), "{}", color::Bg(color::Yellow)),
                         '3' => write!(stdout(), "{}", color::Bg(color::Red)),
                         _ => write!(stdout(), "{}", ""),
                     };
-                    write!(stdout(), "{}", MAP[i*WIDTH + j]);
+                    write!(stdout(), "{}", env.map[i*WIDTH + j]);
                 }
             }
         }
