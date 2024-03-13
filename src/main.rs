@@ -89,16 +89,16 @@ fn quit_game() {
 fn flag_map() {
     // flag the x_pos y_pos
     unsafe {
-        let c: char = env.map[<isize as TryInto<usize>>::try_into(env.y_pos).unwrap() * WIDTH + 
-            <isize as TryInto<usize>>::try_into(env.x_pos).unwrap()];
+        let c: char = env.map[env.y_pos as usize * WIDTH + 
+            env.x_pos as usize];
         if c == 'F' {
-            env.map[<isize as TryInto<usize>>::try_into(env.y_pos).unwrap() * WIDTH + 
-                <isize as TryInto<usize>>::try_into(env.x_pos).unwrap()] = 'x';
+            env.map[env.y_pos as usize * WIDTH + 
+                env.x_pos as usize] = 'x';
         }
         else {
 
-            env.map[<isize as TryInto<usize>>::try_into(env.y_pos).unwrap()*WIDTH +
-                <isize as TryInto<usize>>::try_into(env.x_pos).unwrap()] = 'F';
+            env.map[env.y_pos as usize * WIDTH + 
+                env.x_pos as usize] = 'F';
         }
         if check_win() {
             stdin().lock();
@@ -138,13 +138,13 @@ fn dig_map() -> bool {
         let temp: String = count.to_string();
         println!("{}", temp.to_string());
         if -1 == count {
-            env.map[<isize as TryInto<usize>>::try_into(env.y_pos).unwrap()*WIDTH +
-                <isize as TryInto<usize>>::try_into(env.x_pos).unwrap()] = '*';
+            env.map[ env.y_pos as usize * WIDTH + 
+                env.x_pos as usize] = '*';
         }
         else {
 
-            env.map[<isize as TryInto<usize>>::try_into(env.y_pos).unwrap()*WIDTH +
-                <isize as TryInto<usize>>::try_into(env.x_pos).unwrap()] = char::from_digit(count as u32, 10).unwrap();
+            env.map[env.y_pos as usize * WIDTH + 
+                env.x_pos as usize] = char::from_digit(count as u32, 10).unwrap();
         }
         println!("{}",temp.to_string());
     }
@@ -168,8 +168,8 @@ fn dig_map_loc(x: isize, y: isize) -> bool {
             return true;
         }
         else if count == 0 {
-            env.map[<isize as TryInto<usize>>::try_into(y).unwrap() * WIDTH +
-                <isize as TryInto<usize>>::try_into(x).unwrap()] = '\u{2588}';
+            env.map[y as usize * WIDTH +
+                x as usize] = '\u{2588}';
             //println!("no bombs found nearby, checking position {}, {}", x, y);
             dig_map_loc(x + 1, y);
             dig_map_loc(x - 1, y);
@@ -179,8 +179,8 @@ fn dig_map_loc(x: isize, y: isize) -> bool {
         }
         else {
             //println!("there were {} bombs found nearby, stopping search", count);
-            env.map[<isize as TryInto<usize>>::try_into(y).unwrap() * WIDTH +
-                <isize as TryInto<usize>>::try_into(x).unwrap()] = char::from_digit(count as u32, 10).unwrap();
+            env.map[y as usize * WIDTH +
+                x as usize] = char::from_digit(count as u32, 10).unwrap();
             return false;
         }
     }
@@ -188,17 +188,17 @@ fn dig_map_loc(x: isize, y: isize) -> bool {
 
 fn check_bombs(x: isize, y: isize) -> isize{
     unsafe {
-        let xu = <isize as TryInto<usize>>::try_into(x).unwrap();
-        let yu = <isize as TryInto<usize>>::try_into(y).unwrap(); 
+        let xu = x as usize;
+        let yu = y as usize; 
         if env.field[yu * WIDTH + xu] {
             return -1;
         }
         else {
             let mut counter = 0;
-            let xmin: usize = cmp::max(0,<usize as TryInto<isize>>::try_into(xu).unwrap()-1).try_into().unwrap();
-            let xmax: usize = cmp::min(<usize as TryInto<isize>>::try_into(WIDTH).unwrap(), (xu+2).try_into().unwrap()).try_into().unwrap();
-            let ymin: usize = cmp::max(0, <usize as TryInto<isize>>::try_into(yu).unwrap()-1).try_into().unwrap();
-            let ymax: usize = cmp::min(<usize as TryInto<isize>>::try_into(HEIGHT).unwrap(), (yu+2).try_into().unwrap()).try_into().unwrap();
+            let xmin: usize = cmp::max(0,xu as isize - 1).try_into().unwrap();
+            let xmax: usize = cmp::min(WIDTH as isize, (xu+2).try_into().unwrap()).try_into().unwrap();
+            let ymin: usize = cmp::max(0, yu as isize - 1).try_into().unwrap();
+            let ymax: usize = cmp::min(HEIGHT as isize , (yu+2).try_into().unwrap()).try_into().unwrap();
             //println!("the range for x is {} and {}. the range for y is {} and {}", xmin, xmax, ymin, ymax);
             for i in xmin..xmax {
                 for j in ymin..ymax {
